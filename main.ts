@@ -46,11 +46,17 @@ function nichts1 () {
 }
 function zeigeStatus () {
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, "" + Math.round(bit.measureInCentimeters(DigitalPin.C16)) + "-" + input.lightLevel())
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 12, wattmeter.statuszeile(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45), wattmeter.eStatuszeile.v_mA))
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(convertToText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1)), 3, bit.eAlign.right) + "V" + bit.formatText(convertToText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45))), 4, bit.eAlign.right) + "" + "")
 }
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
     pins.digitalWritePin(DigitalPin.P0, 0)
 })
+function Konfiguration () {
+    bit.comment("P0 Grove Relay; P1 RB LED (DRIVER_ENABLE)")
+    bit.comment("P2 frei; P3 Encoder")
+    bit.comment("P16 Ultraschall; P17 Servo")
+    bit.comment("Erweiterungen: Funk; BIT; LCD 16x2; Motor; Wattmeter")
+}
 function i2cSchleife (bConnected: boolean, pMotor: number, pServo: number) {
     if (bConnected && !(btConnected)) {
         bit.comment("einmalig nach neu connected")
@@ -97,6 +103,7 @@ let btConnected = false
 pins.digitalWritePin(DigitalPin.P0, 1)
 lcd16x2rgb.initLCD(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E))
 wattmeter.reset(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45))
+lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)))
 qwiicmotor.init(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D))
 btConnected = false
 btLaufzeit = input.runningTime()
