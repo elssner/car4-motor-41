@@ -4,6 +4,8 @@ radio.onReceivedNumber(function (receivedNumber) {
     if (!(btConnected) && (qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0) == 128 && qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1) == 90)) {
         bit.comment("einmalig nach neu connected")
         iEncoder = 0
+        iMotor = 128
+        iServo = 90
         btConnected = true
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
         pins.digitalWritePin(DigitalPin.P1, 1)
@@ -31,7 +33,8 @@ function MotorSteuerung (pMotorPower: number, pFahrstrecke: number) {
         bit.comment("Start Anzahl Impulse vom Encoder fahren")
         iFahrstrecke = pFahrstrecke
         iEncoder = 0
-        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), pMotorPower)
+        iMotor = pMotorPower
+        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), iMotor)
         bit.comment("Motor Stop im Impuls-Zähler")
     } else if (iMotor != pMotorPower) {
         bit.comment("connected und nur wenn von Sender empfangener Wert geändert")
@@ -46,7 +49,9 @@ pins.onPulsed(DigitalPin.P3, PulseValue.Low, function () {
     } else {
         iEncoder += -1
     }
-    if (iFahrstrecke != 0 && Math.abs(iEncoder) >= iFahrstrecke) {
+    bit.comment("63.3 Motorwelle * (26/14) Zahnräder / (8 * PI) Rad Umfang = 4.6774502 || Test: 946 Impulse = 200 cm")
+    if (iFahrstrecke != 0 && Math.abs(iEncoder) >= iFahrstrecke * 4.73) {
+        iMotor = 128
         qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), 128)
     }
 })
@@ -69,7 +74,7 @@ function ServoSteuerung (pWinkel: number) {
     } else if (iServo != pWinkel) {
         bit.comment("connected und Wert geändert")
         iServo = pWinkel
-        pins.servoWritePin(AnalogPin.C17, iServo + 6)
+        pins.servoWritePin(AnalogPin.C17, iServo + 8)
         return true
     } else {
         return true
