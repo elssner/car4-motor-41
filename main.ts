@@ -8,8 +8,8 @@ radio.onReceivedNumber(function (receivedNumber) {
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
         pins.digitalWritePin(DigitalPin.P1, 1)
         basic.setLedColor(0x00ff00)
-    } else if (btConnected) {
-        bit.comment("dauerhaft wenn connected")
+    } else if (btConnected && iFahrstrecke == 0) {
+        bit.comment("dauerhaft wenn connected (Joystick, nicht bei Fahrstrecke)")
         bit.comment("1 Servo 45..90..135")
         if (ServoSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1))) {
             bit.comment("0 Motor 0..128..255")
@@ -19,18 +19,18 @@ radio.onReceivedNumber(function (receivedNumber) {
             MotorSteuerung(128, 0)
         }
         zeigeStatus()
+    } else if (btConnected && qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z2) == 0) {
+        bit.comment("iFahrstrecke erst zurück setzen, wenn 0 empfangen wurde")
+        iFahrstrecke = 0
     }
 })
 function MotorSteuerung (pMotorPower: number, pFahrstrecke: number) {
     if (iFahrstrecke == 0 && pFahrstrecke != 0) {
-        bit.comment("Anzahl Impulse vom Encoder fahren")
+        bit.comment("Start Anzahl Impulse vom Encoder fahren")
         iFahrstrecke = pFahrstrecke
         iEncoder = 0
         qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), pMotorPower)
-    } else if (iFahrstrecke != 0 && Math.abs(iEncoder) > iFahrstrecke) {
-        bit.comment("Motor Stop")
-        iFahrstrecke = 0
-        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), 0)
+        bit.comment("Motor Stop im Impuls-Zähler")
     } else if (iMotor != pMotorPower) {
         bit.comment("connected und nur wenn von Sender empfangener Wert geändert")
         iMotor = pMotorPower
@@ -44,10 +44,12 @@ pins.onPulsed(DigitalPin.P3, PulseValue.Low, function () {
     } else {
         iEncoder += -1
     }
+    if (iFahrstrecke != 0 && Math.abs(iEncoder) >= iFahrstrecke) {
+        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), 0)
+    }
 })
 function zeigeStatus () {
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 11, lcd16x2rgb.lcd16x2_text("" + bit.formatText(iMotor, 3, bit.eAlign.right) + bit.formatText(iServo, 4, bit.eAlign.right) + bit.formatText(iFahrstrecke, 4, bit.eAlign.right)))
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 12, 15, iEncoder, lcd16x2rgb.eAlign.right)
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("" + bit.formatText(iMotor, 3, bit.eAlign.right) + bit.formatText(iServo, 4, bit.eAlign.right) + bit.formatText(iFahrstrecke, 4, bit.eAlign.right) + bit.formatText(iEncoder, 5, bit.eAlign.right)))
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1), 3, bit.eAlign.right) + "V" + bit.formatText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 4, bit.eAlign.right))
 }
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
@@ -108,6 +110,6 @@ loops.everyInterval(500, function () {
             basic.turnRgbLedOff()
         }
     } else {
-        bit.comment("Bluetooth ist verbunden: 'wenn Zahl empfangen' ruft i2cSchleife auf")
+        bit.comment("Bluetooth ist verbunden: 'wenn Zahl empfangen' ist aktiv")
     }
 })
