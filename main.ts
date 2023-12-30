@@ -7,22 +7,24 @@ radio.onReceivedNumber(function (receivedNumber) {
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
         pins.digitalWritePin(DigitalPin.P1, 1)
         basic.setLedColor(0x00ff00)
+    } else if (btConnected) {
+        bit.comment("dauerhaft wenn connected")
+        bit.comment("1 Servo 0..45..135")
+        if (ServoSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1))) {
+            bit.comment("0 Motor 0..128..255")
+            MotorSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0))
+        } else {
+            bit.comment("wenn Servo Winkel ungültig -> Motor Stop")
+            MotorSteuerung(128)
+        }
+        zeigeStatus()
     }
-    bit.comment("0 Motor 0..128..255")
-    MotorSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0))
-    bit.comment("1 Servo 0..45..135")
-    ServoSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1))
 })
 function MotorSteuerung (pMotorPower: number) {
-    if (!(btConnected)) {
-        qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, false)
-        iMotor = 128
-        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), iMotor)
-    } else if (iMotor != pMotorPower) {
+    if (iMotor != pMotorPower) {
         bit.comment("connected und nur wenn von Sender empfangener Wert geändert")
         iMotor = pMotorPower
         qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), iMotor)
-        qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
     }
 }
 function nichts1 () {
@@ -43,7 +45,8 @@ function nichts1 () {
     }
 }
 function zeigeStatus () {
-	
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, "" + Math.round(bit.measureInCentimeters(DigitalPin.C16)) + "-" + input.lightLevel())
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 12, wattmeter.statuszeile(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45), wattmeter.eStatuszeile.v_mA))
 }
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
     pins.digitalWritePin(DigitalPin.P0, 0)
@@ -74,19 +77,18 @@ function i2cSchleife (bConnected: boolean, pMotor: number, pServo: number) {
     } else {
         bit.comment("dauerhaft wenn disconnected")
     }
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, "" + Math.round(bit.measureInCentimeters(DigitalPin.C16)) + "-" + input.lightLevel())
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 12, wattmeter.statuszeile(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45), wattmeter.eStatuszeile.v_mA))
 }
 function ServoSteuerung (pWinkel: number) {
-    if (!(btConnected)) {
-        bit.comment("Bluetooth unterbrochen")
-        iServo = 90
+    if (!(bit.between(pWinkel, 45, 135))) {
+        return false
     } else if (iServo != pWinkel) {
         bit.comment("connected und Wert geändert")
         iServo = pWinkel
         pins.servoWritePin(AnalogPin.C17, iServo + 6)
+        return true
+    } else {
+        return true
     }
-    return iServo
 }
 let iServo = 0
 let iMotor = 0
@@ -105,15 +107,15 @@ loops.everyInterval(500, function () {
     if (input.runningTime() - btLaufzeit > 60000) {
         bit.comment("nach 1 Minute ohne Bluetooth Relais aus schalten")
         pins.digitalWritePin(DigitalPin.P0, 0)
-    } else if (input.runningTime() - btLaufzeit > 1000) {
+    } else if (btConnected && input.runningTime() - btLaufzeit > 1000) {
         bit.comment("zwischen 1 Sekunde und 1 Minute ohne Bluetooth: Standby und blau blinken")
-        if (btConnected) {
-            bit.comment("einmalig nach neu disconnected")
-            btConnected = false
-            qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, false)
-            pins.digitalWritePin(DigitalPin.P1, 0)
-        }
+        bit.comment("einmalig nach neu disconnected")
+        btConnected = false
+        qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, false)
+        pins.digitalWritePin(DigitalPin.P1, 0)
+    } else if (!(btConnected)) {
         bit.comment("dauerhaft wenn disconnected")
+        zeigeStatus()
         if (Math.trunc(input.runningTime() / 1000) % 2 == 1) {
             basic.setLedColor(0x0000ff)
         } else {
