@@ -13,16 +13,25 @@ radio.onReceivedNumber(function (receivedNumber) {
         bit.comment("1 Servo 45..90..135")
         if (ServoSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1))) {
             bit.comment("0 Motor 0..128..255")
-            MotorSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0))
+            MotorSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0), qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z2))
         } else {
             bit.comment("wenn Servo Winkel ungültig -> Motor Stop")
-            MotorSteuerung(128)
+            MotorSteuerung(128, 0)
         }
         zeigeStatus()
     }
 })
-function MotorSteuerung (pMotorPower: number) {
-    if (iMotor != pMotorPower) {
+function MotorSteuerung (pMotorPower: number, pFahrstrecke: number) {
+    if (iFahrstrecke == 0 && pFahrstrecke != 0) {
+        bit.comment("Anzahl Impulse vom Encoder fahren")
+        iFahrstrecke = pFahrstrecke
+        iEncoder = 0
+        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), pMotorPower)
+    } else if (iFahrstrecke != 0 && Math.abs(iEncoder) > iFahrstrecke) {
+        bit.comment("Motor Stop")
+        iFahrstrecke = 0
+        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), 0)
+    } else if (iMotor != pMotorPower) {
         bit.comment("connected und nur wenn von Sender empfangener Wert geändert")
         iMotor = pMotorPower
         qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), iMotor)
@@ -37,8 +46,9 @@ pins.onPulsed(DigitalPin.P3, PulseValue.Low, function () {
     }
 })
 function zeigeStatus () {
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, iEncoder, lcd16x2rgb.eAlign.right)
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(convertToText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1)), 3, bit.eAlign.right) + "V" + bit.formatText(convertToText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45))), 4, bit.eAlign.right))
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 11, lcd16x2rgb.lcd16x2_text("" + bit.formatText(iMotor, 3, bit.eAlign.right) + bit.formatText(iServo, 4, bit.eAlign.right) + bit.formatText(iFahrstrecke, 4, bit.eAlign.right)))
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 12, 15, iEncoder, lcd16x2rgb.eAlign.right)
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1), 3, bit.eAlign.right) + "V" + bit.formatText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 4, bit.eAlign.right))
 }
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
     pins.digitalWritePin(DigitalPin.P0, 0)
@@ -64,15 +74,17 @@ function ServoSteuerung (pWinkel: number) {
 let iServo = 0
 let iMotor = 0
 let iEncoder = 0
+let iFahrstrecke = 0
 let btLaufzeit = 0
 let btConnected = false
 pins.digitalWritePin(DigitalPin.P0, 1)
 lcd16x2rgb.initLCD(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E))
+lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("CaR 4"))
 wattmeter.reset(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45))
-lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)))
 qwiicmotor.init(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D))
 btConnected = false
 btLaufzeit = input.runningTime()
+iFahrstrecke = 0
 radio.setGroup(240)
 pins.servoWritePin(AnalogPin.C17, 96)
 pins.setPull(DigitalPin.P3, PinPullMode.PullUp)
