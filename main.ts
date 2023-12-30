@@ -43,8 +43,15 @@ function nichts1 () {
         }
     }
 }
+pins.onPulsed(DigitalPin.P3, PulseValue.Low, function () {
+    if (iMotor >= 128) {
+        iEncoder += 1
+    } else {
+        iEncoder += -1
+    }
+})
 function zeigeStatus () {
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, "" + Math.round(bit.measureInCentimeters(DigitalPin.C16)) + "-" + input.lightLevel())
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, iEncoder, lcd16x2rgb.eAlign.right)
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(convertToText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1)), 3, bit.eAlign.right) + "V" + bit.formatText(convertToText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45))), 4, bit.eAlign.right))
 }
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
@@ -96,6 +103,7 @@ function ServoSteuerung (pWinkel: number) {
     }
 }
 let iServo = 0
+let iEncoder = 0
 let iMotor = 0
 let btLaufzeit = 0
 let btConnected = false
@@ -108,6 +116,7 @@ btConnected = false
 btLaufzeit = input.runningTime()
 radio.setGroup(240)
 pins.servoWritePin(AnalogPin.C17, 96)
+pins.setPull(DigitalPin.P3, PinPullMode.PullUp)
 loops.everyInterval(500, function () {
     bit.comment("Überwachung Bluetooth")
     if (input.runningTime() - btLaufzeit > 60000) {
