@@ -10,7 +10,7 @@ radio.onReceivedNumber(function (receivedNumber) {
         basic.setLedColor(0x00ff00)
     } else if (btConnected) {
         bit.comment("dauerhaft wenn connected")
-        bit.comment("1 Servo 0..45..135")
+        bit.comment("1 Servo 45..90..135")
         if (ServoSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1))) {
             bit.comment("0 Motor 0..128..255")
             MotorSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0))
