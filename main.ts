@@ -36,7 +36,6 @@ function nichts1 () {
         pins.digitalWritePin(DigitalPin.P0, 0)
     } else {
         bit.comment("zwischen 1 Sekunde und 1 Minute ohne Bluetooth: Standby und blau blinken")
-        i2cSchleife(false, 128, 90)
         if (Math.trunc(input.runningTime() / 1000) % 2 == 1) {
             basic.setLedColor(0x0000ff)
         } else {
@@ -46,18 +45,12 @@ function nichts1 () {
 }
 function zeigeStatus () {
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, "" + Math.round(bit.measureInCentimeters(DigitalPin.C16)) + "-" + input.lightLevel())
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(convertToText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1)), 3, bit.eAlign.right) + "V" + bit.formatText(convertToText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45))), 4, bit.eAlign.right) + "" + "")
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(convertToText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1)), 3, bit.eAlign.right) + "V" + bit.formatText(convertToText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45))), 4, bit.eAlign.right))
 }
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
     pins.digitalWritePin(DigitalPin.P0, 0)
 })
-function Konfiguration () {
-    bit.comment("P0 Grove Relay; P1 RB LED (DRIVER_ENABLE)")
-    bit.comment("P2 frei; P3 Encoder")
-    bit.comment("P16 Ultraschall; P17 Servo")
-    bit.comment("Erweiterungen: Funk; BIT; LCD 16x2; Motor; Wattmeter")
-}
-function i2cSchleife (bConnected: boolean, pMotor: number, pServo: number) {
+function nichts2 (bConnected: boolean, pMotor: number, pServo: number) {
     if (bConnected && !(btConnected)) {
         bit.comment("einmalig nach neu connected")
         btConnected = true
@@ -83,6 +76,12 @@ function i2cSchleife (bConnected: boolean, pMotor: number, pServo: number) {
     } else {
         bit.comment("dauerhaft wenn disconnected")
     }
+}
+function Konfiguration () {
+    bit.comment("P0 Grove Relay; P1 RB LED (DRIVER_ENABLE)")
+    bit.comment("P2 frei; P3 Encoder")
+    bit.comment("P16 Ultraschall; P17 Servo")
+    bit.comment("5 Erweiterungen: Funk; BIT; LCD 16x2; Motor; Wattmeter")
 }
 function ServoSteuerung (pWinkel: number) {
     if (!(bit.between(pWinkel, 45, 135))) {
