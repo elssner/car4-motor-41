@@ -8,20 +8,22 @@ radio.onReceivedNumber(function (receivedNumber) {
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
         pins.digitalWritePin(DigitalPin.P1, 1)
         basic.setLedColor(0x00ff00)
-    } else if (btConnected && iFahrstrecke == 0) {
-        bit.comment("dauerhaft wenn connected (Joystick, nicht bei Fahrstrecke)")
-        bit.comment("1 Servo 45..90..135")
-        if (ServoSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1))) {
-            bit.comment("0 Motor 0..128..255")
-            MotorSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0), qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z2))
-        } else {
-            bit.comment("wenn Servo Winkel ungültig -> Motor Stop")
-            MotorSteuerung(128, 0)
+    } else if (btConnected) {
+        if (iFahrstrecke == 0) {
+            bit.comment("dauerhaft wenn connected (Joystick, nicht bei Fahrstrecke)")
+            bit.comment("1 Servo 45..90..135")
+            if (ServoSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1))) {
+                bit.comment("0 Motor 0..128..255")
+                MotorSteuerung(qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0), qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z2))
+            } else {
+                bit.comment("wenn Servo Winkel ungültig -> Motor Stop")
+                MotorSteuerung(128, 0)
+            }
+        } else if (qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z2) == 0) {
+            bit.comment("iFahrstrecke erst zurück setzen, wenn 0 empfangen wurde")
+            iFahrstrecke = 0
         }
         zeigeStatus()
-    } else if (btConnected && qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z2) == 0) {
-        bit.comment("iFahrstrecke erst zurück setzen, wenn 0 empfangen wurde")
-        iFahrstrecke = 0
     }
 })
 function MotorSteuerung (pMotorPower: number, pFahrstrecke: number) {
@@ -45,7 +47,7 @@ pins.onPulsed(DigitalPin.P3, PulseValue.Low, function () {
         iEncoder += -1
     }
     if (iFahrstrecke != 0 && Math.abs(iEncoder) >= iFahrstrecke) {
-        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), 0)
+        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), 128)
     }
 })
 function zeigeStatus () {
