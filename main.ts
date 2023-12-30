@@ -3,6 +3,7 @@ radio.onReceivedNumber(function (receivedNumber) {
     qwiicmotor.setReceivedNumber(receivedNumber)
     if (!(btConnected) && (qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0) == 128 && qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1) == 90)) {
         bit.comment("einmalig nach neu connected")
+        iEncoder = 0
         btConnected = true
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
         pins.digitalWritePin(DigitalPin.P1, 1)
@@ -27,23 +28,8 @@ function MotorSteuerung (pMotorPower: number) {
         qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), iMotor)
     }
 }
-function nichts1 () {
-    bit.comment("Überwachung Bluetooth")
-    if (input.runningTime() - btLaufzeit < 1000) {
-        bit.comment("Bluetooth ist verbunden: 'wenn Zahl empfangen' ruft i2cSchleife auf")
-    } else if (input.runningTime() - btLaufzeit > 60000) {
-        bit.comment("nach 1 Minute ohne Bluetooth Relais aus schalten")
-        pins.digitalWritePin(DigitalPin.P0, 0)
-    } else {
-        bit.comment("zwischen 1 Sekunde und 1 Minute ohne Bluetooth: Standby und blau blinken")
-        if (Math.trunc(input.runningTime() / 1000) % 2 == 1) {
-            basic.setLedColor(0x0000ff)
-        } else {
-            basic.turnRgbLedOff()
-        }
-    }
-}
 pins.onPulsed(DigitalPin.P3, PulseValue.Low, function () {
+    bit.comment("Encoder 63.3 Impulse pro U/Motorwelle")
     if (iMotor >= 128) {
         iEncoder += 1
     } else {
@@ -57,33 +43,6 @@ function zeigeStatus () {
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
     pins.digitalWritePin(DigitalPin.P0, 0)
 })
-function nichts2 (bConnected: boolean, pMotor: number, pServo: number) {
-    if (bConnected && !(btConnected)) {
-        bit.comment("einmalig nach neu connected")
-        btConnected = true
-        qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
-        basic.setLedColor(0x00ff00)
-    } else if (btConnected && !(bConnected)) {
-        bit.comment("einmalig nach neu disconnected")
-        btConnected = false
-        qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, false)
-        iMotor = 128
-        iServo = 90
-    }
-    if (btConnected) {
-        bit.comment("dauerhaft wenn connected")
-        if (iMotor != pMotor) {
-            iMotor = pMotor
-            qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), iMotor)
-        }
-        if (iServo != pServo) {
-            iServo = pServo
-            pins.servoWritePin(AnalogPin.C17, iServo + 6)
-        }
-    } else {
-        bit.comment("dauerhaft wenn disconnected")
-    }
-}
 function Konfiguration () {
     bit.comment("P0 Grove Relay; P1 RB LED (DRIVER_ENABLE)")
     bit.comment("P2 frei; P3 Encoder")
@@ -103,8 +62,8 @@ function ServoSteuerung (pWinkel: number) {
     }
 }
 let iServo = 0
-let iEncoder = 0
 let iMotor = 0
+let iEncoder = 0
 let btLaufzeit = 0
 let btConnected = false
 pins.digitalWritePin(DigitalPin.P0, 1)
