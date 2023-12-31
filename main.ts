@@ -1,11 +1,8 @@
 radio.onReceivedNumber(function (receivedNumber) {
     btLaufzeit = input.runningTime()
     qwiicmotor.setReceivedNumber(receivedNumber)
-    if (!(btConnected) && (qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z0) == 128 && qwiicmotor.getReceivedNumber(NumberFormat.UInt8LE, qwiicmotor.eOffset.z1) == 90)) {
+    if (!(btConnected) && true) {
         bit.comment("einmalig nach neu connected")
-        iEncoder = 0
-        iMotor = 128
-        iServo = 90
         btConnected = true
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
         pins.digitalWritePin(DigitalPin.P1, 1)
@@ -81,8 +78,8 @@ function ServoSteuerung (pWinkel: number) {
     }
 }
 let iServo = 0
-let iMotor = 0
 let iEncoder = 0
+let iMotor = 0
 let iFahrstrecke = 0
 let btLaufzeit = 0
 let btConnected = false
@@ -97,7 +94,7 @@ iFahrstrecke = 0
 radio.setGroup(240)
 pins.servoWritePin(AnalogPin.C17, 96)
 pins.setPull(DigitalPin.P3, PinPullMode.PullUp)
-loops.everyInterval(500, function () {
+loops.everyInterval(800, function () {
     bit.comment("Überwachung Bluetooth")
     if (input.runningTime() - btLaufzeit > 60000) {
         bit.comment("nach 1 Minute ohne Bluetooth Relais aus schalten")
