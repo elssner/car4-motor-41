@@ -48,8 +48,7 @@ pins.onPulsed(DigitalPin.P3, PulseValue.Low, function () {
     }
     bit.comment("63.3 Motorwelle * (26/14) Zahnräder / (8 * PI) Rad Umfang = 4.6774502 || Test: 946 Impulse = 200 cm")
     if (iFahrstrecke != 0 && Math.abs(iEncoder) >= iFahrstrecke * 4.73) {
-        iMotor = 128
-        qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MB_DRIVE), 128)
+        MotorSteuerung(128, 0)
     }
 })
 function zeigeStatus () {
