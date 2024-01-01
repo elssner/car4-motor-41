@@ -72,7 +72,7 @@ function Konfiguration () {
     bit.comment("P0 Grove Relay; P1 Fototransistor")
     bit.comment("P2 Encoder; P3 Buzzer")
     bit.comment("P4 Servo; ")
-    bit.comment("P5 Draht blau; P6 gelb")
+    bit.comment("P5 Draht blau; P6 Draht gelb")
     bit.comment("P7 Licht; P8 Ultraschall")
     bit.comment("5 Erweiterungen: Funk; BIT; LCD 16x2; Motor; Wattmeter")
 }
