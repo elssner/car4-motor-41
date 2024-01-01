@@ -59,6 +59,13 @@ pins.onPulsed(DigitalPin.P2, PulseValue.Low, function () {
     }
 })
 function Helligkeit (pHelligkeit: number) {
+    if (bLicht && pHelligkeit >= 300) {
+        bLicht = false
+        pins.digitalWritePin(DigitalPin.C7, 0)
+    } else if (!(bLicht) && pHelligkeit < 200) {
+        bLicht = true
+        pins.digitalWritePin(DigitalPin.C7, 1)
+    }
     return pHelligkeit
 }
 function Konfiguration () {
@@ -81,6 +88,7 @@ function ServoSteuerung (pWinkel: number) {
         return true
     }
 }
+let bLicht = false
 let iServo = 0
 let iEncoder = 0
 let iMotor = 0
