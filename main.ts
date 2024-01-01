@@ -40,7 +40,7 @@ function MotorSteuerung (pMotorPower: number, pFahrstrecke: number) {
 }
 function zeigeStatus () {
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("" + bit.formatText(iMotor, 3, bit.eAlign.right) + bit.formatText(iServo, 4, bit.eAlign.right) + bit.formatText(iFahrstrecke, 4, bit.eAlign.right) + bit.formatText(iEncoder, 5, bit.eAlign.right)))
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 7, "" + bit.formatText(Math.round(bit.measureInCentimeters(DigitalPin.C8)), 3, bit.eAlign.right) + bit.formatText(Helligkeit(pins.analogReadPin(AnalogPin.C4)), 4, bit.eAlign.right))
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 7, "" + bit.formatText(Math.round(bit.measureInCentimeters(DigitalPin.C8)), 3, bit.eAlign.right) + bit.formatText(Helligkeit(pins.analogReadPin(AnalogPin.P1)), 4, bit.eAlign.right))
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1), 3, bit.eAlign.right) + "V" + bit.formatText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 4, bit.eAlign.right))
 }
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
@@ -73,7 +73,7 @@ function ServoSteuerung (pWinkel: number) {
     } else if (iServo != pWinkel) {
         bit.comment("connected und Wert geändert")
         iServo = pWinkel
-        pins.servoWritePin(AnalogPin.P1, iServo + 8)
+        pins.servoWritePin(AnalogPin.C4, iServo + 8)
         return true
     } else {
         return true
@@ -94,7 +94,7 @@ btConnected = false
 btLaufzeit = input.runningTime()
 iFahrstrecke = 0
 radio.setGroup(240)
-pins.servoWritePin(AnalogPin.P1, 96)
+pins.servoWritePin(AnalogPin.C4, 96)
 led.enable(false)
 pins.setPull(DigitalPin.P2, PinPullMode.PullUp)
 loops.everyInterval(800, function () {
