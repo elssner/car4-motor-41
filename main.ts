@@ -5,7 +5,7 @@ radio.onReceivedNumber(function (receivedNumber) {
         bit.comment("einmalig nach neu connected")
         btConnected = true
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
-        basic.setLedColor(0x00ff00)
+        bLicht = !(bLicht)
     } else if (btConnected) {
         if (iFahrstrecke == 0) {
             bit.comment("dauerhaft wenn connected (Joystick, nicht bei Fahrstrecke)")
@@ -88,10 +88,10 @@ function ServoSteuerung (pWinkel: number) {
         return true
     }
 }
-let bLicht = false
 let iServo = 0
 let iEncoder = 0
 let iMotor = 0
+let bLicht = false
 let iFahrstrecke = 0
 let btLaufzeit = 0
 let btConnected = false
@@ -104,10 +104,10 @@ btConnected = false
 btLaufzeit = input.runningTime()
 iFahrstrecke = 0
 radio.setGroup(240)
-pins.servoWritePin(AnalogPin.C4, 96)
 led.enable(false)
+pins.servoWritePin(AnalogPin.C4, 96)
 pins.setPull(DigitalPin.P2, PinPullMode.PullUp)
-loops.everyInterval(800, function () {
+loops.everyInterval(1000, function () {
     bit.comment("Überwachung Bluetooth")
     if (input.runningTime() - btLaufzeit > 60000) {
         bit.comment("nach 1 Minute ohne Bluetooth Relais aus schalten")
@@ -121,9 +121,9 @@ loops.everyInterval(800, function () {
         bit.comment("dauerhaft wenn disconnected")
         zeigeStatus()
         if (Math.trunc(input.runningTime() / 1000) % 2 == 1) {
-            basic.setLedColor(0x0000ff)
+            pins.digitalWritePin(DigitalPin.C7, 0)
         } else {
-            basic.turnRgbLedOff()
+            pins.digitalWritePin(DigitalPin.C7, 1)
         }
     } else {
         bit.comment("Bluetooth ist verbunden: 'wenn Zahl empfangen' ist aktiv")
