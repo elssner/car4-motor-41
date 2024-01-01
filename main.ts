@@ -88,6 +88,7 @@ function ServoSteuerung (pWinkel: number) {
         return true
     }
 }
+let dBlink = 0
 let iServo = 0
 let iEncoder = 0
 let iMotor = 0
@@ -119,11 +120,8 @@ loops.everyInterval(1000, function () {
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, false)
     } else if (!(btConnected)) {
         bit.comment("dauerhaft wenn disconnected")
-        if (Math.trunc(input.runningTime() / 1000) % 2 == 1) {
-            pins.digitalWritePin(DigitalPin.C7, 0)
-        } else {
-            pins.digitalWritePin(DigitalPin.C7, 1)
-        }
+        dBlink = 1 - dBlink
+        pins.digitalWritePin(DigitalPin.C7, dBlink)
         zeigeStatus()
     } else {
         bit.comment("Bluetooth ist verbunden: 'wenn Zahl empfangen' ist aktiv")
