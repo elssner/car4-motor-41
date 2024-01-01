@@ -40,13 +40,12 @@ function MotorSteuerung (pMotorPower: number, pFahrstrecke: number) {
 }
 function zeigeStatus () {
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("" + bit.formatText(iMotor, 3, bit.eAlign.right) + bit.formatText(iServo, 4, bit.eAlign.right) + bit.formatText(iFahrstrecke, 4, bit.eAlign.right) + bit.formatText(iEncoder, 5, bit.eAlign.right)))
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 7, "" + bit.formatText(Helligkeit(pins.analogReadPin(AnalogPin.C4)), 3, bit.eAlign.right) + "Welt")
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1), 3, bit.eAlign.right) + "V" + bit.formatText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 4, bit.eAlign.right))
 }
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
     pins.digitalWritePin(DigitalPin.P0, 0)
 })
-pins.onPulsed(DigitalPin.C8, PulseValue.Low, function () {
+pins.onPulsed(DigitalPin.P2, PulseValue.Low, function () {
     bit.comment("Encoder 63.3 Impulse pro U/Motorwelle")
     if (iMotor >= 128) {
         iEncoder += 1
@@ -87,7 +86,7 @@ let btLaufzeit = 0
 let btConnected = false
 pins.digitalWritePin(DigitalPin.P0, 1)
 lcd16x2rgb.initLCD(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E))
-lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("CaR 4"))
+lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("CaR 4-41"))
 wattmeter.reset(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45))
 qwiicmotor.init(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D))
 btConnected = false
@@ -95,7 +94,8 @@ btLaufzeit = input.runningTime()
 iFahrstrecke = 0
 radio.setGroup(240)
 pins.servoWritePin(AnalogPin.P1, 96)
-pins.setPull(DigitalPin.C8, PinPullMode.PullUp)
+led.enable(false)
+pins.setPull(DigitalPin.P2, PinPullMode.PullUp)
 loops.everyInterval(800, function () {
     bit.comment("Überwachung Bluetooth")
     if (input.runningTime() - btLaufzeit > 60000) {
