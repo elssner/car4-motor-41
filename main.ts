@@ -38,13 +38,9 @@ function MotorSteuerung (pMotorPower: number, pFahrstrecke: number) {
         qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MA_DRIVE), iMotor)
     }
 }
-function Entfernung (pEntfernung: number) {
-    bBuzzer = iMotor > 128 && pEntfernung < 20
-    return pEntfernung
-}
 function zeigeStatus () {
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("" + bit.formatText(iMotor, 3, bit.eAlign.right) + bit.formatText(iServo, 4, bit.eAlign.right) + bit.formatText(iFahrstrecke, 4, bit.eAlign.right) + bit.formatText(iEncoder, 5, bit.eAlign.right)))
-    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 7, "" + bit.formatText(Entfernung(bit.measureInCentimeters(DigitalPin.C8)), 3, bit.eAlign.right) + bit.formatText(Helligkeit(pins.analogReadPin(AnalogPin.P1)), 4, bit.eAlign.right))
+    lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 7, "" + bit.formatText(Math.round(bit.measureInCentimeters(DigitalPin.C8)), 3, bit.eAlign.right) + bit.formatText(Helligkeit(pins.analogReadPin(AnalogPin.P1)), 4, bit.eAlign.right))
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 8, 15, "" + bit.formatText(bit.roundWithPrecision(wattmeter.get_bus_voltage_V(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 1), 3, bit.eAlign.right) + "V" + bit.formatText(wattmeter.get_current_mA(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45)), 4, bit.eAlign.right))
 }
 input.onButtonEvent(Button.B, input.buttonEventClick(), function () {
@@ -94,7 +90,6 @@ function ServoSteuerung (pWinkel: number) {
 }
 let dBlink = 0
 let iServo = 0
-let bBuzzer = false
 let iEncoder = 0
 let iMotor = 0
 let bLicht = false
@@ -130,12 +125,5 @@ loops.everyInterval(1000, function () {
         zeigeStatus()
     } else {
         bit.comment("Bluetooth ist verbunden: 'wenn Zahl empfangen' ist aktiv")
-    }
-})
-loops.everyInterval(500, function () {
-    if (bBuzzer) {
-        pins.digitalWritePin(DigitalPin.P3, 1)
-        basic.pause(200)
-        pins.digitalWritePin(DigitalPin.P3, 0)
     }
 })
