@@ -1,12 +1,12 @@
 radio.onReceivedNumber(function (receivedNumber) {
-    btLaufzeit = input.runningTime()
+    iLaufzeit = input.runningTime()
     qwiicmotor.setReceivedNumber(receivedNumber)
-    if (!(btConnected) && true) {
+    if (!(bConnected) && true) {
         bit.comment("einmalig nach neu connected")
-        btConnected = true
+        bConnected = true
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, true)
         bLicht = !(bLicht)
-    } else if (btConnected) {
+    } else if (bConnected) {
         if (iFahrstrecke == 0) {
             bit.comment("dauerhaft wenn connected (Joystick, nicht bei Fahrstrecke)")
             bit.comment("1 Servo 45..90..135")
@@ -95,15 +95,15 @@ let iEncoder = 0
 let iMotor = 0
 let bLicht = false
 let iFahrstrecke = 0
-let btLaufzeit = 0
-let btConnected = false
+let iLaufzeit = 0
+let bConnected = false
 pins.digitalWritePin(DigitalPin.P0, 1)
 lcd16x2rgb.initLCD(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E))
-lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("CaR 4-41"))
+lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("CaR4-motor-41"))
 wattmeter.reset(wattmeter.wattmeter_eADDR(wattmeter.eADDR.Watt_x45))
 qwiicmotor.init(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D))
-btConnected = false
-btLaufzeit = input.runningTime()
+bConnected = false
+iLaufzeit = input.runningTime()
 iFahrstrecke = 0
 radio.setGroup(240)
 led.enable(false)
@@ -111,15 +111,15 @@ pins.servoWritePin(AnalogPin.C4, 96)
 pins.setPull(DigitalPin.P2, PinPullMode.PullUp)
 loops.everyInterval(1000, function () {
     bit.comment("Überwachung Bluetooth")
-    if (input.runningTime() - btLaufzeit > 60000) {
+    if (input.runningTime() - iLaufzeit > 60000) {
         bit.comment("nach 1 Minute ohne Bluetooth Relais aus schalten")
         pins.digitalWritePin(DigitalPin.P0, 0)
-    } else if (btConnected && input.runningTime() - btLaufzeit > 1000) {
+    } else if (bConnected && input.runningTime() - iLaufzeit > 1000) {
         bit.comment("zwischen 1 Sekunde und 1 Minute ohne Bluetooth: Standby und blau blinken")
         bit.comment("einmalig nach neu disconnected")
-        btConnected = false
+        bConnected = false
         qwiicmotor.controlRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.eControl.DRIVER_ENABLE, false)
-    } else if (!(btConnected)) {
+    } else if (!(bConnected)) {
         bit.comment("dauerhaft wenn disconnected")
         dBlink = 1 - dBlink
         pins.digitalWritePin(DigitalPin.C7, dBlink)
