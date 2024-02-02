@@ -38,9 +38,6 @@ function MotorSteuerung (pMotorPower: number, pFahrstrecke: number) {
         qwiicmotor.writeRegister(qwiicmotor.qwiicmotor_eADDR(qwiicmotor.eADDR.Motor_x5D), qwiicmotor.qwiicmotor_eRegister(qwiicmotor.eRegister.MA_DRIVE), iMotor)
     }
 }
-function car4motor41 () {
-    bit.comment("")
-}
 function zeigeStatus () {
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 0, 0, 15, lcd16x2rgb.lcd16x2_text("" + bit.formatText(iMotor, 3, bit.eAlign.right) + bit.formatText(iServo, 4, bit.eAlign.right) + bit.formatText(iFahrstrecke, 4, bit.eAlign.right) + bit.formatText(iEncoder, 5, bit.eAlign.right)))
     lcd16x2rgb.writeText(lcd16x2rgb.lcd16x2_eADDR(lcd16x2rgb.eADDR_LCD.LCD_16x2_x3E), 1, 0, 7, "" + bit.formatText(Math.round(bit.measureInCentimeters(DigitalPin.C8)), 3, bit.eAlign.right) + bit.formatText(Helligkeit(pins.analogReadPin(AnalogPin.P1)), 4, bit.eAlign.right))
@@ -72,6 +69,7 @@ function Helligkeit (pHelligkeit: number) {
     return pHelligkeit
 }
 function Konfiguration () {
+    bit.comment("elssner/car4-motor-41")
     bit.comment("P0 Grove Relay; P1 Fototransistor")
     bit.comment("P2 Encoder; P3 Buzzer")
     bit.comment("P4 Servo; ")
